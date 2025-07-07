@@ -1,14 +1,15 @@
 import serial
 
-# Try with the likely serial device
-ser = serial.Serial('/dev/ttyAMA0', baudrate=9600, timeout=1)
+# Adjust baudrate if necessary
+ser = serial.Serial("/dev/ttyAMA0", baudrate=9600, timeout=2)
 
 try:
+    print("Waiting for scale data. Press 'Hold/Print' on the scale...")
     while True:
-        if ser.in_waiting:
-            data = ser.readline().decode('utf-8', errors='replace').strip()
-            print(f"Received: {data}")
+        line = ser.readline().decode("utf-8", errors="ignore").strip()
+        if line:
+            print("Weight:", line)
 except KeyboardInterrupt:
-    print("Stopping...")
+    print("\nStopped.")
 finally:
     ser.close()
