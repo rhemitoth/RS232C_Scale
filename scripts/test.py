@@ -14,7 +14,6 @@ def parse_weight_line(line):
         return label, value, unit
     return None
 
-# Create an empty DataFrame with columns for timestamp and weights
 df = pd.DataFrame(columns=["Timestamp", "Gross", "Tare", "Net", "Unit"])
 
 try:
@@ -30,21 +29,19 @@ try:
                 weights[label] = value
                 current_unit = unit
                 if all(k in weights for k in ("Gross", "Tare", "Net")):
-                    # Add a row with current timestamp and weights
-                    df = df.append({
+                    new_row = pd.DataFrame([{
                         "Timestamp": datetime.now(),
                         "Gross": weights["Gross"],
                         "Tare": weights["Tare"],
                         "Net": weights["Net"],
                         "Unit": current_unit
-                    }, ignore_index=True)
-                    print(df.tail(1))  # print the last added row
-                    weights.clear()  # reset for next reading
-
+                    }])
+                    df = pd.concat([df, new_row], ignore_index=True)
+                    print(df.tail(1))
+                    weights.clear()
 except KeyboardInterrupt:
     print("\nStopped.")
 finally:
     ser.close()
-    # Save the collected data to a CSV file
     df.to_csv("scale_weights.csv", index=False)
     print("Saved data to scale_weights.csv")
