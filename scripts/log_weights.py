@@ -53,6 +53,7 @@ font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
 # ================================================================================================
 
 deer_img = Image.open("/home/moorcroftlab/Documents/RS232C_Scale/deer_image/epaper_display.bmp").resize((50,100)).convert("1")
+deer_img = deer_img.resize((122, 250))
 
 # ================================================================================================
 #                                       Fat Deer Message
