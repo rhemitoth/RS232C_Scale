@@ -150,7 +150,7 @@ df = pd.DataFrame(columns=["Timestamp", "Gross", "Tare", "Net", "Unit"])
 
 try:
     print("Waiting for scale data... The scale will send stable readings automatically.")
-    display_waiting_message("0.0", epd, deer_img)
+    display_waiting_message(0.0, epd, deer_img)
 
 
     weights = {}        # Temporary dict to collect Gross, Tare, Net values
