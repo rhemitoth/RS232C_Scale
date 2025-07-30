@@ -99,8 +99,8 @@ def display_waiting_message(weight, epd, deer_img):
     draw = ImageDraw.Draw(image)
 
     # Font setup
-    small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
-    large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
+    small_font = ImageFont.truetype("/usr/share/moorcroftlab/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+    large_font = ImageFont.truetype("/usr/share/moorcroftlab/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
 
     message = "I'm waiting..."
 
