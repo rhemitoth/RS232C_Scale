@@ -79,14 +79,10 @@ def display_fat_deer_message(weight, epd, deer_img):
     else:
         message = "All four hooves on the platform, please!"
 
-    # Draw message in speech bubble (assumes white background)
-    draw.text((125, 20), message, font=small_font, fill=1)
+    draw.text((10, 10), message, font=small_font, fill=0)  # black text
+    draw.text((10, 60), f"{int(weight):d}", font=large_font, fill=0)
+    draw.text((10, 130), "kg", font=small_font, fill=0)
 
-    # Draw weight in large white numbers (on pre-existing black rectangle)
-    draw.text((130, 70), f"{int(weight):d}", font=large_font, fill=0)
-
-    # Draw "kg" in smaller white font below the number
-    draw.text((130, 115), "kg", font=small_font, fill=0)
 
     # Display final image
     epd.display(epd.getbuffer(image))
@@ -97,28 +93,20 @@ def display_fat_deer_message(weight, epd, deer_img):
 # ================================================================================================
 
 def display_waiting_message(weight, epd, deer_img):
-    # Use pre-designed background image with speech bubble and black rectangle
     image = deer_img.convert("1").copy()
     draw = ImageDraw.Draw(image)
 
-    # Font setup
     small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
     large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
 
-
     message = "I'm waiting..."
 
-    # Draw message in speech bubble (assumes white background)
-    draw.text((125, 20), message, font=small_font, fill=1)
+    draw.text((10, 10), message, font=small_font, fill=0)  # black text
+    draw.text((10, 60), f"{int(weight):d}", font=large_font, fill=0)
+    draw.text((10, 130), "kg", font=small_font, fill=0)
 
-    # Draw weight in large white numbers (on pre-existing black rectangle)
-    draw.text((130, 70), f"{int(weight):d}", font=large_font, fill=0)
-
-    # Draw "kg" in smaller white font below the number
-    draw.text((130, 115), "kg", font=small_font, fill=0)
-
-    # Display final image
     epd.display(epd.getbuffer(image))
+
 
 
 # Open serial connection to the scale
