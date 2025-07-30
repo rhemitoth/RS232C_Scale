@@ -43,4 +43,3 @@ This repository contains code to program a Raspberry Pi to read data from an ele
 
 - Make sure your scale is configured to send stable weight readings automatically through the RS232C port.
 - You may need to adjust the serial port device path (`/dev/ttyAMA0`) in the script depending on your Raspberry Pi setup.
-- For long-term deployments, consider adding periodic autosaving or data validation features to the script to improve robustness.
