@@ -102,8 +102,8 @@ def display_waiting_message(weight, epd, deer_img):
     message = "I'm waiting..."
 
     draw.text((10, 20), message, font=small_font, fill=0)  # black text
-    draw.text((65, 190), f"{int(weight):d}", font=large_font, fill=1)
-    draw.text((65, 225), "kg", font=small_font, fill=1)
+    draw.text((45, 150), f"{int(weight):d}", font=large_font, fill=1)
+    draw.text((45, 225), "kg", font=small_font, fill=1)
 
     epd.display(epd.getbuffer(image))
 
