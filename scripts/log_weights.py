@@ -23,10 +23,31 @@ Note:
 - Additional filtering or validation of incoming data may be necessary for noisy environments.
 """
 
+# ================================================================================================
+#                                       Import modeuls
+# ================================================================================================
+
 import serial
 import re
 import pandas as pd
 from datetime import datetime
+from PIL import Image, ImageDraw, ImageFont
+import random
+import os
+
+# ================================================================================================
+#                                       Load e-Paper Displaydriver
+# ================================================================================================
+
+from waveshare_epd import epd2in13_V4  
+epd = epd2in13_V4.EPD()
+epd.init()
+epd.Clear(0xFF)
+
+# ================================================================================================
+#                                       Load Deer Image
+# ================================================================================================
+
 
 # Open serial connection to the scale
 # Adjust "/dev/ttyAMA0" if your device is on a different port
