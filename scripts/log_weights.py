@@ -39,14 +39,19 @@ import os
 #                                       Load e-Paper Displaydriver
 # ================================================================================================
 
+# Driver
 from waveshare_epd import epd2in13_V4  
 epd = epd2in13_V4.EPD()
 epd.init()
 epd.Clear(0xFF)
 
+# font
+font = ImageFont.truetype("moorcroftlab/share/fonts/truetype/dejavu/DeJaVuSans.ttf",14)
 # ================================================================================================
 #                                       Load Deer Image
 # ================================================================================================
+
+deer_img = Image.open("/home/moorcroftlab/Documents/RS232C_Scale/deer_image/epaper_display.bmp").resize((50,100)).convert("1")
 
 
 # Open serial connection to the scale
