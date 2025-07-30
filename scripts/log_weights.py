@@ -63,8 +63,8 @@ def display_fat_deer_message(weight, epd, deer_img):
     draw = ImageDraw.Draw(image)
 
     # Font setup
-    small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
-    large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
+    small_font = ImageFont.truetype("/moorcroftlab/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+    large_font = ImageFont.truetype("/moorcroftlab/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
 
     # Pick message
     if weight >= 10:
