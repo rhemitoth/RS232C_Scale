@@ -93,7 +93,7 @@ def display_fat_deer_message(weight, epd, deer_img):
 #                                       waiting message
 # ================================================================================================
 
-def display_waiting_message(weight = "0.0", epd, deer_img):
+def display_waiting_message(weight, epd, deer_img):
     # Use pre-designed background image with speech bubble and black rectangle
     image = deer_img.convert("1").copy()
     draw = ImageDraw.Draw(image)
