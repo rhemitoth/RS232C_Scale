@@ -53,6 +53,69 @@ font = ImageFont.truetype("moorcroftlab/share/fonts/truetype/dejavu/DeJaVuSans.t
 
 deer_img = Image.open("/home/moorcroftlab/Documents/RS232C_Scale/deer_image/epaper_display.bmp").resize((50,100)).convert("1")
 
+# ================================================================================================
+#                                       Fat Deer Message
+# ================================================================================================
+
+def display_fat_deer_message(weight, epd, deer_img):
+    # Use pre-designed background image with speech bubble and black rectangle
+    image = deer_img.convert("1").copy()
+    draw = ImageDraw.Draw(image)
+
+    # Font setup
+    small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+    large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
+
+    # Pick message
+    if weight >= 10:
+        message = random.choice([
+            "Someone has been eating too much corn...",
+            "Wait...are you sure you're not a red deer?",
+            "Looks like we've got ourselves another feeding site addict"
+        ])
+    else:
+        message = "All four hooves on the platform, please!"
+
+    # Draw message in speech bubble (assumes white background)
+    draw.text((125, 20), message, font=small_font, fill=0)
+
+    # Draw weight in large white numbers (on pre-existing black rectangle)
+    draw.text((130, 70), f"{int(weight):d}", font=large_font, fill=255)
+
+    # Draw "kg" in smaller white font below the number
+    draw.text((130, 115), "kg", font=small_font, fill=255)
+
+    # Display final image
+    epd.display(epd.getbuffer(image))
+
+   
+# ================================================================================================
+#                                       waiting message
+# ================================================================================================
+
+def display_waiting_message(weight = "0.0", epd, deer_img):
+    # Use pre-designed background image with speech bubble and black rectangle
+    image = deer_img.convert("1").copy()
+    draw = ImageDraw.Draw(image)
+
+    # Font setup
+    small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+    large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
+
+    message = "I'm waiting..."
+
+    # Draw message in speech bubble (assumes white background)
+    draw.text((125, 20), message, font=small_font, fill=0)
+
+    # Draw weight in large white numbers (on pre-existing black rectangle)
+    draw.text((130, 70), f"{int(weight):d}", font=large_font, fill=255)
+
+    # Draw "kg" in smaller white font below the number
+    draw.text((130, 115), "kg", font=small_font, fill=255)
+
+    # Display final image
+    epd.display(epd.getbuffer(image))
+
 
 # Open serial connection to the scale
 # Adjust "/dev/ttyAMA0" if your device is on a different port
@@ -84,6 +147,8 @@ df = pd.DataFrame(columns=["Timestamp", "Gross", "Tare", "Net", "Unit"])
 
 try:
     print("Waiting for scale data... The scale will send stable readings automatically.")
+    display_waiting_message("0.0", epd, deer_img)
+
 
     weights = {}        # Temporary dict to collect Gross, Tare, Net values
     current_unit = ""   # Store unit of measurement for each reading
@@ -100,16 +165,23 @@ try:
 
                 # Once all three weights are collected, save them as a new row
                 if all(k in weights for k in ("Gross", "Tare", "Net")):
+                    net_weight = weights["Net"]
+
                     new_row = pd.DataFrame([{
                         "Timestamp": datetime.now(),
                         "Gross": weights["Gross"],
                         "Tare": weights["Tare"],
-                        "Net": weights["Net"],
+                        "Net": net_weight,
                         "Unit": current_unit
                     }])
                     df = pd.concat([df, new_row], ignore_index=True)
                     print(df.tail(1))
+
+                    # Show deer message on e-paper
+                    display_fat_deer_message(net_weight, epd, deer_img)
+
                     weights.clear()
+
 
 except KeyboardInterrupt:
     print("\nStopped by user.")
