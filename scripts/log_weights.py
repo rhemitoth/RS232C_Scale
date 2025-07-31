@@ -70,8 +70,8 @@ def display_fat_deer_message(weight, epd):
         message = "All 4 hooves on the platform, please!"
 
     draw.text((5, 5), message, font=small_font, fill=0)
-    draw.text((115, 40), f"{int(weight):d}", font=large_font, fill=0)
-    draw.text((140, 100), "kg", font=small_font, fill=0)
+    draw.text((90, 40), f"{int(weight):d}", font=large_font, fill=0)
+    draw.text((130, 40), "kg", font=small_font, fill=0)
 
     epd.display(epd.getbuffer(image))
 
