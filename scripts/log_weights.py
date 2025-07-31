@@ -79,7 +79,7 @@ def display_fat_deer_message(weight, epd):
 
     # Draw weight
     draw.text((25, 60), f"{int(weight):d}", font=large_font, fill=0)
-    draw.text((145, 80), "kg", font=small_font, fill=0)
+    draw.text((145, 90), "kg", font=small_font, fill=0)
 
     epd.display(epd.getbuffer(image))
 
@@ -135,20 +135,30 @@ try:
                 if all(k in weights for k in ("Gross", "Tare", "Net")):
                     net_weight = weights["Net"]
 
-                    new_row = pd.DataFrame([{
-                        "Timestamp": datetime.now(),
-                        "Gross": weights["Gross"],
-                        "Tare": weights["Tare"],
-                        "Net": net_weight,
-                        "Unit": current_unit
-                    }])
-                    df = pd.concat([df, new_row], ignore_index=True)
-                    print(df.tail(1))
-
                     if net_weight > 0:
+
                         display_fat_deer_message(net_weight, epd)
+
+                        new_row = pd.DataFrame([{
+                            "Timestamp": datetime.now(),
+                            "Gross": weights["Gross"],
+                            "Tare": weights["Tare"],
+                            "Net": net_weight,
+                            "Unit": current_unit
+                        }])
+
+                        # Append new row to DataFrame
+                        df = pd.concat([df, new_row], ignore_index=True)
+                        print(df.tail(1))
+
+                        # Append to CSV immediately (without header if file exists)
+                        new_row.to_csv("scale_weights.csv", mode='a', header=not os.path.exists("scale_weights.csv"), index=False)
+
+                        print(df.tail(1))
+
                     else:
                         display_waiting_message(epd)
+                        
                     weights.clear()
 
 except KeyboardInterrupt:
