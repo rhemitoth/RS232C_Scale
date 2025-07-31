@@ -34,97 +34,65 @@ from datetime import datetime
 from PIL import Image, ImageDraw, ImageFont
 import random
 import os
+import time
+from waveshare_epd import epd2in13_V4
 
 # ================================================================================================
-#                                       Load e-Paper Displaydriver
+#                                       Setup e-Paper Display
 # ================================================================================================
 
-# Driver
-from waveshare_epd import epd2in13_V4  
 epd = epd2in13_V4.EPD()
 epd.init()
 epd.Clear(0xFF)
 
-# font
-font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
+EPD_WIDTH = epd.height
+EPD_HEIGHT = epd.width
+
+# Use built-in font or one from your system
+small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
 
 # ================================================================================================
-#                                       Load Deer Image
+#                                       Display Functions (Text Only)
 # ================================================================================================
 
-deer_img = Image.open("/home/moorcroftlab/Documents/RS232C_Scale/deer_image/epaper_display.bmp").resize((50,100)).convert("1")
-deer_img = deer_img.resize((122, 250))
-
-# ================================================================================================
-#                                       Fat Deer Message
-# ================================================================================================
-
-def display_fat_deer_message(weight, epd, deer_img):
-    # Use pre-designed background image with speech bubble and black rectangle
-    image = deer_img.convert("1").copy()
+def display_fat_deer_message(weight, epd):
+    image = Image.new("1", (EPD_WIDTH, EPD_HEIGHT), 255)  # white background
     draw = ImageDraw.Draw(image)
 
-    # Font setup
-    small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
-    large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
-
-
-    # Pick message
     if weight >= 10:
         message = random.choice([
-            "Someone has been eating too much corn...",
-            "Wait...are you sure you're not a red deer?",
-            "Looks like we've got ourselves another feeding site addict"
+            "Someone's eaten too much corn!",
+            "Sure you're not a red deer?",
+            "Feeding site addict detected!"
         ])
     else:
-        message = "All four hooves on the platform, please!"
+        message = "All 4 hooves on the platform!"
 
-    draw.text((10, 10), message, font=small_font, fill=0)  # black text
-    draw.text((10, 60), f"{int(weight):d}", font=large_font, fill=0)
-    draw.text((10, 130), "kg", font=small_font, fill=0)
+    draw.text((5, 5), message, font=small_font, fill=0)
+    draw.text((5, 40), f"{int(weight):d}", font=large_font, fill=0)
+    draw.text((5, 100), "kg", font=small_font, fill=0)
 
-
-    # Display final image
     epd.display(epd.getbuffer(image))
 
-   
-# ================================================================================================
-#                                       waiting message
-# ================================================================================================
-
-def display_waiting_message(weight, epd, deer_img):
-    image = deer_img.convert("1").copy()
+def display_waiting_message(epd):
+    image = Image.new("1", (EPD_WIDTH, EPD_HEIGHT), 255)
     draw = ImageDraw.Draw(image)
 
-    small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
-    large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
-
-    message = "I'm waiting..."
-
-    draw.text((10, 20), message, font=small_font, fill=0)  # black text
-    draw.text((45, 150), f"{int(weight):d}", font=large_font, fill=1)
-    draw.text((45, 225), "kg", font=small_font, fill=1)
-
+    draw.text((10, 20), "Waiting for stable weight...", font=small_font, fill=0)
     epd.display(epd.getbuffer(image))
 
+# ================================================================================================
+#                                       Serial Setup & Parsing
+# ================================================================================================
 
-
-# Open serial connection to the scale
-# Adjust "/dev/ttyAMA0" if your device is on a different port
 ser = serial.Serial("/dev/ttyAMA0", baudrate=9600, timeout=2)
 
 def parse_weight_line(line):
     """
-    Parse a single line of text from the scale's serial output.
-
-    Expected format examples:
-      "Gross:  1.23lb"
-      "Tare:   0.00lb"
-      "Net:    1.23lb"
-
-    Returns:
-      tuple (label, value, unit) if matched, e.g. ("Gross", 1.23, "lb")
-      None if the line does not match expected pattern.
+    Parse a single line from scale output.
+    Expected: "Gross: 1.23lb", "Tare: 0.00lb", "Net: 1.23lb"
+    Returns: (label, value, unit) or None
     """
     match = re.search(r"(Gross|Tare|Net):\s*([\d\.]+)(lb|kg)?", line)
     if match:
@@ -134,19 +102,20 @@ def parse_weight_line(line):
         return label, value, unit
     return None
 
-# Initialize an empty DataFrame to store weight data
+# ================================================================================================
+#                                       Main Loop
+# ================================================================================================
+
 df = pd.DataFrame(columns=["Timestamp", "Gross", "Tare", "Net", "Unit"])
 
 try:
-    print("Waiting for scale data... The scale will send stable readings automatically.")
-    display_waiting_message(0.0, epd, deer_img)
+    print("Waiting for scale data...")
+    display_waiting_message(epd)
 
-
-    weights = {}        # Temporary dict to collect Gross, Tare, Net values
-    current_unit = ""   # Store unit of measurement for each reading
+    weights = {}
+    current_unit = ""
 
     while True:
-        # Read line from serial port with 2-second timeout
         line = ser.readline().decode("utf-8", errors="ignore").strip()
         if line:
             result = parse_weight_line(line)
@@ -155,7 +124,6 @@ try:
                 weights[label] = value
                 current_unit = unit
 
-                # Once all three weights are collected, save them as a new row
                 if all(k in weights for k in ("Gross", "Tare", "Net")):
                     net_weight = weights["Net"]
 
@@ -169,11 +137,8 @@ try:
                     df = pd.concat([df, new_row], ignore_index=True)
                     print(df.tail(1))
 
-                    # Show deer message on e-paper
-                    display_fat_deer_message(net_weight, epd, deer_img)
-
+                    display_fat_deer_message(net_weight, epd)
                     weights.clear()
-
 
 except KeyboardInterrupt:
     print("\nStopped by user.")
@@ -182,3 +147,4 @@ finally:
     ser.close()
     df.to_csv("scale_weights.csv", index=False)
     print("Saved data to scale_weights.csv")
+    epd.sleep()
