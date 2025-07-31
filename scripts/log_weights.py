@@ -62,8 +62,8 @@ def display_fat_deer_message(weight, epd):
 
     if weight >= 10:
         message = random.choice([
-            "Someone's eaten too much corn!",
-            "Sure you're not a red deer?",
+            "Someone's been eating a lot of corn...",
+            "Wait...are you sure you're not a red deer?",
             "Feeding site addict detected!"
         ])
     elif weight > 0:
