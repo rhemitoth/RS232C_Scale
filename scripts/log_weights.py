@@ -116,7 +116,7 @@ def parse_weight_line(line):
 # ================================================================================================
 
 def get_usb_mount_path():
-    base_path = "/media/pi/"
+    base_path = "/media/moocroftlab/"
     if os.path.exists(base_path):
         devices = os.listdir(base_path)
         if devices:
