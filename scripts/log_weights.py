@@ -173,7 +173,7 @@ try:
                         display_fat_deer_message(net_weight, epd)
 
                         new_row = pd.DataFrame([{
-                            "Timestamp": datetime.now(),
+                            "Timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],  # ISO format with milliseconds
                             "Gross": weights["Gross"],
                             "Tare": weights["Tare"],
                             "Net": net_weight,
