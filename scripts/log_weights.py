@@ -62,16 +62,25 @@ def display_fat_deer_message(weight, epd):
 
     if weight >= 10:
         message = random.choice([
-            ["Someone's been eating"," a lot of corn..."],
+            ["Someone's been eating", "a lot of corn..."],
             ["Wait...are you sure", "you're not a red deer?"],
-            "Feeding site addict detected!"
+            ["Feeding site addict", "detected!"]
         ])
     else:
-        message = "All 4 hooves on the platform, please!"
+        message = ["All 4 hooves on the", "platform, please!"]
 
-    draw.text((5, 5), message, font=small_font, fill=0)
+    # Draw each line of the message
+    y = 5
+    for line in message:
+        draw.text((5, y), line, font=small_font, fill=0)
+        y += small_font.getsize(line)[1] + 2  # line height + spacing
+
+    # Draw weight
     draw.text((50, 60), f"{int(weight):d}", font=large_font, fill=0)
     draw.text((130, 60), "kg", font=small_font, fill=0)
+
+    epd.display(epd.getbuffer(image))
+
 
     epd.display(epd.getbuffer(image))
 
