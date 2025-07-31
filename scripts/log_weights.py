@@ -78,7 +78,7 @@ def display_fat_deer_message(weight, epd):
 
 
     # Draw weight
-    draw.text((25, 60), f"{int(weight):d}", font=large_font, fill=0)
+    draw.text((25, 60), f"{float(weight):d}", font=large_font, fill=0)
     draw.text((145, 90), "kg", font=small_font, fill=0)
 
     epd.display(epd.getbuffer(image))
