@@ -116,12 +116,17 @@ def parse_weight_line(line):
 # ================================================================================================
 
 def get_usb_mount_path():
-    base_path = "/media/moocroftlab/"
+    username = getpass.getuser()  # should be 'moorcroftlab'
+    base_path = f"/media/{username}/"
     if os.path.exists(base_path):
         devices = os.listdir(base_path)
-        if devices:
-            return os.path.join(base_path, devices[0])  # Return first mounted device
+        for device in devices:
+            device_path = os.path.join(base_path, device)
+            if os.path.ismount(device_path):
+                # Return the first mounted device found
+                return device_path
     return None
+
 
 def display_no_usb_warning(epd):
     image = Image.new("1", (EPD_WIDTH, EPD_HEIGHT), 255)
