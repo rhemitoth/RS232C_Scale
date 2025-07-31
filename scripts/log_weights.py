@@ -66,10 +66,8 @@ def display_fat_deer_message(weight, epd):
             "Wait...are you sure you're not a red deer?",
             "Feeding site addict detected!"
         ])
-    elif weight > 0:
-        message = "All 4 hooves on the platform, please!"
     else:
-        pass
+        message = "All 4 hooves on the platform, please!"
 
     draw.text((5, 5), message, font=small_font, fill=0)
     draw.text((115, 40), f"{int(weight):d}", font=large_font, fill=0)
@@ -139,7 +137,10 @@ try:
                     df = pd.concat([df, new_row], ignore_index=True)
                     print(df.tail(1))
 
-                    display_fat_deer_message(net_weight, epd)
+                    if net_weight > 0:
+                        display_fat_deer_message(net_weight, epd)
+                    else:
+                        display_waiting_message(epd)
                     weights.clear()
 
 except KeyboardInterrupt:
