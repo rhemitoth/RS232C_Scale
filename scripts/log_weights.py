@@ -116,7 +116,7 @@ def parse_weight_line(line):
 # ================================================================================================
 
 def get_usb_mount_path():
-    username = getpass.getuser()  # should be 'moorcroftlab'
+    username = moocroftlab  # should be 'moorcroftlab'
     base_path = f"/media/{username}/"
     if os.path.exists(base_path):
         devices = os.listdir(base_path)
