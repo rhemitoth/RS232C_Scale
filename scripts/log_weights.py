@@ -110,6 +110,32 @@ def parse_weight_line(line):
         return label, value, unit
     return None
 
+
+# ================================================================================================
+#                                       USB Mounting
+# ================================================================================================
+
+def get_usb_mount_path():
+    base_path = "/media/pi/"
+    if os.path.exists(base_path):
+        devices = os.listdir(base_path)
+        if devices:
+            return os.path.join(base_path, devices[0])  # Return first mounted device
+    return None
+
+def display_no_usb_warning(epd):
+    image = Image.new("1", (EPD_WIDTH, EPD_HEIGHT), 255)
+    draw = ImageDraw.Draw(image)
+
+    warning_text = ["WARNING!", "No SD Card detected", "Please insert USB to continue."]
+    y = 10
+    for line in warning_text:
+        draw.text((10, y), line, font=small_font, fill=0)
+        y += 20
+
+    epd.display(epd.getbuffer(image))
+
+
 # ================================================================================================
 #                                       Main Loop
 # ================================================================================================
@@ -152,13 +178,24 @@ try:
                         print(df.tail(1))
 
                         # Append to CSV immediately (without header if file exists)
-                        new_row.to_csv("scale_weights.csv", mode='a', header=not os.path.exists("scale_weights.csv"), index=False)
+                        # Try saving to USB
+                        usb_path = get_usb_mount_path()
+                        if usb_path:
+                            file_path = os.path.join(usb_path, "scale_weights.csv")
+                            new_row.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
+                        else:
+                            display_no_usb_warning(epd)
+                            print("WARNING: No USB drive detected. Waiting for re-insertion...")
 
-                        print(df.tail(1))
+                            # Wait loop until USB is inserted
+                            while not get_usb_mount_path():
+                                time.sleep(1)
+                            display_waiting_message(epd)
+
 
                     else:
                         display_waiting_message(epd)
-                        
+
                     weights.clear()
 
 except KeyboardInterrupt:
@@ -166,6 +203,4 @@ except KeyboardInterrupt:
 
 finally:
     ser.close()
-    df.to_csv("scale_weights.csv", index=False)
-    print("Saved data to scale_weights.csv")
     epd.sleep()
