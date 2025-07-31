@@ -66,12 +66,14 @@ def display_fat_deer_message(weight, epd):
             "Sure you're not a red deer?",
             "Feeding site addict detected!"
         ])
+    elif weight > 0:
+        message = "All 4 hooves on the platform, please!"
     else:
-        message = "All 4 hooves on the platform!"
+        pass
 
     draw.text((5, 5), message, font=small_font, fill=0)
-    draw.text((5, 40), f"{int(weight):d}", font=large_font, fill=0)
-    draw.text((5, 100), "kg", font=small_font, fill=0)
+    draw.text((115, 40), f"{int(weight):d}", font=large_font, fill=0)
+    draw.text((140, 100), "kg", font=small_font, fill=0)
 
     epd.display(epd.getbuffer(image))
 
