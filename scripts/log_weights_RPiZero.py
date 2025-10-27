@@ -13,13 +13,12 @@ Features:
 - Timeout set for 2 seconds on serial read to balance responsiveness and CPU usage
 
 Usage:
+- Intended for use with a Raspberry Pi Zero
 - Ensure pyserial and pandas are installed (`pip install pyserial pandas`)
 - Adjust serial port path if needed
-- Run script and stop with Ctrl+C to save collected data
 
 Note:
 - The scale must be configured to send data automatically upon stable readings.
-- For longer deployments, consider adding periodic autosave to CSV to avoid data loss.
 - Additional filtering or validation of incoming data may be necessary for noisy environments.
 """
 
@@ -31,64 +30,9 @@ import serial
 import re
 import pandas as pd
 from datetime import datetime
-from PIL import Image, ImageDraw, ImageFont
 import random
 import os
 import time
-from waveshare_epd import epd2in13_V4
-
-# ================================================================================================
-#                                       Setup e-Paper Display
-# ================================================================================================
-
-epd = epd2in13_V4.EPD()
-epd.init()
-epd.Clear(0xFF)
-
-EPD_WIDTH = epd.height
-EPD_HEIGHT = epd.width
-
-# Use built-in font or one from your system
-small_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
-large_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
-
-# ================================================================================================
-#                                       Display Functions (Text Only)
-# ================================================================================================
-
-def display_fat_deer_message(weight, epd):
-    image = Image.new("1", (EPD_WIDTH, EPD_HEIGHT), 255)  # white background
-    draw = ImageDraw.Draw(image)
-
-    if weight >= 10:
-        message = random.choice([
-            ["Someone's been eating", "a lot of corn..."],
-            ["Wait...are you sure", "you're not a red deer?"],
-            ["Feeding site addict", "detected!"]
-        ])
-    else:
-        message = ["All 4 hooves on the", "platform, please!"]
-
-    # Draw each line of the message
-    y = 5
-    for line in message:
-        draw.text((5, y), line, font=small_font, fill=0)
-        line_height = small_font.getbbox(line)[3] - small_font.getbbox(line)[1]
-        y += line_height + 2
-
-
-    # Draw weight
-    draw.text((25, 60), f"{weight:.1f}", font=large_font, fill=0)
-    draw.text((145, 90), "kg", font=small_font, fill=0)
-
-    epd.display(epd.getbuffer(image))
-
-def display_waiting_message(epd):
-    image = Image.new("1", (EPD_WIDTH, EPD_HEIGHT), 255)
-    draw = ImageDraw.Draw(image)
-
-    draw.text((10, 20), "Waiting for stable weight...", font=small_font, fill=0)
-    epd.display(epd.getbuffer(image))
 
 # ================================================================================================
 #                                       Serial Setup & Parsing
@@ -149,7 +93,6 @@ df = pd.DataFrame(columns=["Timestamp", "Gross", "Tare", "Net", "Unit"])
 
 try:
     print("Waiting for scale data...")
-    display_waiting_message(epd)
 
     weights = {}
     current_unit = ""
@@ -170,8 +113,6 @@ try:
 
                     if net_weight > 0:
 
-                        display_fat_deer_message(net_weight, epd)
-
                         new_row = pd.DataFrame([{
                             "Timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],  # ISO format with milliseconds
                             "Gross": weights["Gross"],
@@ -191,17 +132,15 @@ try:
                             file_path = os.path.join(usb_path, "scale_weights.csv")
                             new_row.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
                         else:
-                            display_no_usb_warning(epd)
                             print("WARNING: No USB drive detected. Waiting for re-insertion...")
 
                             # Wait loop until USB is inserted
                             while not get_usb_mount_path():
                                 time.sleep(1)
-                            display_waiting_message(epd)
 
 
                     else:
-                        display_waiting_message(epd)
+                        print("Waiting for scale data...")
 
                     weights.clear()
 
