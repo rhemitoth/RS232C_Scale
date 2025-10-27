@@ -71,20 +71,6 @@ def get_usb_mount_path():
                 return device_path
     return None
 
-
-def display_no_usb_warning(epd):
-    image = Image.new("1", (EPD_WIDTH, EPD_HEIGHT), 255)
-    draw = ImageDraw.Draw(image)
-
-    warning_text = ["WARNING!", "No SD Card detected", "Please insert USB to continue."]
-    y = 10
-    for line in warning_text:
-        draw.text((10, y), line, font=small_font, fill=0)
-        y += 20
-
-    epd.display(epd.getbuffer(image))
-
-
 # ================================================================================================
 #                                       Main Loop
 # ================================================================================================
@@ -149,4 +135,3 @@ except KeyboardInterrupt:
 
 finally:
     ser.close()
-    epd.sleep()
