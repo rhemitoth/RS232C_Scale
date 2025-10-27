@@ -85,6 +85,7 @@ try:
 
     while True:
         line = ser.readline().decode("utf-8", errors="ignore").strip()
+        print(line)
         mount_path = get_usb_mount_path()
         print(f"USB Mount Path: {mount_path}")
         if line:
