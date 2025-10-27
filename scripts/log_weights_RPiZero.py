@@ -38,7 +38,7 @@ import time
 #                                       Serial Setup & Parsing
 # ================================================================================================
 
-ser = serial.Serial("/dev/ttyAMA0, baudrate=9600, timeout=2")
+ser = serial.Serial("/dev/serial0, baudrate=9600, timeout=2")
 
 def parse_weight_line(line):
     """
