@@ -52,7 +52,7 @@ def parse_weight_line(line):
     return None
 
 def clean_line(raw_bytes):
-    """Decode serial bytes and remove control characters"""
+    """Decode serial bytes and remove ASCII control characters"""
     line = raw_bytes.decode("utf-8", errors="ignore")
     line = re.sub(r'[\x00-\x1F\x7F]', '', line).strip()
     return line
@@ -61,14 +61,19 @@ def clean_line(raw_bytes):
 #                                       USB Mounting
 # ================================================================================================
 def get_usb_mount_path():
+    """
+    Returns the path of the first mounted USB drive under /media/{username}/
+    Returns None if no drive is mounted.
+    """
     username = "moorcroftlab"
     base_path = f"/media/{username}/"
-    if os.path.exists(base_path):
-        devices = os.listdir(base_path)
-        for device in devices:
-            device_path = os.path.join(base_path, device)
-            if os.path.ismount(device_path):
-                return device_path
+    if not os.path.exists(base_path):
+        return None
+
+    for device in os.listdir(base_path):
+        device_path = os.path.join(base_path, device)
+        if os.path.ismount(device_path):
+            return device_path
     return None
 
 # ================================================================================================
@@ -83,22 +88,26 @@ try:
     current_unit = ""
 
     while True:
+        # Read a raw line from the scale
         raw_line = ser.readline()
         if not raw_line:
             continue
 
+        # Clean the line from control characters
         line = clean_line(raw_line)
         if not line:
             continue
 
         print("Received:", line)
 
+        # Parse weight values
         result = parse_weight_line(line)
         if result:
             label, value, unit = result
             weights[label] = value
             current_unit = unit
 
+        # If all three values are available, process
         if all(k in weights for k in ("Gross", "Tare", "Net")):
             net_weight = weights["Net"]
 
@@ -112,23 +121,23 @@ try:
                     "Unit": current_unit
                 }])
 
-                # Append to DataFrame and print
+                # Append to in-memory DataFrame
                 df = pd.concat([df, new_row], ignore_index=True)
-                print(df.tail(1))
+                print("Row ready to save:", new_row)
 
-                # Block until USB is available
-                usb_path = None
+                # BLOCKING USB check
+                usb_path = get_usb_mount_path()
                 while not usb_path:
+                    print("WARNING: No USB drive detected. Waiting for insertion...")
+                    time.sleep(1)
                     usb_path = get_usb_mount_path()
-                    if not usb_path:
-                        print("Waiting for USB drive...")
-                        time.sleep(1)
 
+                # Save to CSV on USB
                 file_path = os.path.join(usb_path, "scale_weights.csv")
                 new_row.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
                 print(f"Saved to {file_path}")
 
-            # Clear weights for next reading
+            # Clear weights for the next set of readings
             weights.clear()
 
 except KeyboardInterrupt:
@@ -136,4 +145,3 @@ except KeyboardInterrupt:
 
 finally:
     ser.close()
-
