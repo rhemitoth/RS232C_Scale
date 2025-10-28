@@ -163,5 +163,23 @@ These scripts read weight data automatically from the scale through the RS232C i
 - Ensure your scale is configured to send stable weight readings automatically through the RS232C port
 - Adjust the serial port device path (`/dev/ttyAMA0`) if needed depending on your Raspberry Pi setup
 
+## Using the DS3231 RTC on Raspberry Pi Zero
+
+The Pi Zero does not include a hardware clock (`hwclock`). To persist time across reboots using an external DS3231 RTC, run the `set_RTC.sh` script.
+
+### Purpose
+- Detects the DS3231 on I2C
+- Writes the current system time to the RTC
+- Works even if `hwclock` is not available
+
+### Usage
+1. Make the script executable:
+   chmod +x set_RTC.sh
+2. Run it with sudo:
+   sudo ./set_RTC.sh
+
+This will update the RTC with the current system time so it persists across reboots.
+
+
 
 
