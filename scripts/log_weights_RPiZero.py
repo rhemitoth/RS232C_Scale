@@ -67,13 +67,23 @@ def get_usb_mount_path():
     """
     username = "moorcroftlab"
     base_path = f"/media/{username}/"
+    
     if not os.path.exists(base_path):
+        print(f"Base path {base_path} does not exist")
         return None
 
-    for device in os.listdir(base_path):
+    devices = os.listdir(base_path)
+    if not devices:
+        print("No devices found under /media/moorcroftlab/")
+        return None
+
+    for device in devices:
         device_path = os.path.join(base_path, device)
         if os.path.ismount(device_path):
+            print(f"Detected mounted USB at: '{device_path}'")
             return device_path
+
+    print("No USB drives mounted")
     return None
 
 # ================================================================================================
@@ -125,7 +135,7 @@ try:
                 df = pd.concat([df, new_row], ignore_index=True)
                 print("Row ready to save:", new_row)
 
-                # BLOCKING USB check
+                # BLOCK until USB is available
                 usb_path = get_usb_mount_path()
                 while not usb_path:
                     print("WARNING: No USB drive detected. Waiting for insertion...")
