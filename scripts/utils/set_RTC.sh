@@ -1,24 +1,23 @@
 #!/bin/bash
-# ds3231-sync.sh
-# Sync system time <-> DS3231 RTC on Raspberry Pi Zero
+# set_RTC.sh
+# Sync system time to DS3231 RTC on Raspberry Pi Zero
+# Works even if hwclock is not installed
 
-# Exit if any command fails
 set -e
 
-# I2C bus and RTC address
 I2C_BUS=1
 RTC_ADDR=0x68
 
-# Check if i2c-tools is installed
+# Install i2c-tools if missing
 if ! command -v i2cset &> /dev/null; then
     echo "i2c-tools not found. Installing..."
     sudo apt update
     sudo apt install -y i2c-tools
 fi
 
-# Check if DS3231 is detected
-if ! i2cdetect -y $I2C_BUS | grep -q "$RTC_ADDR"; then
-    echo "DS3231 not detected on I2C bus $I2C_BUS at address $RTC_ADDR"
+# Detect DS3231 (allow for 'UU' if kernel driver owns the device)
+if ! i2cdetect -y $I2C_BUS | grep -E -q "68|UU"; then
+    echo "DS3231 not detected on I2C bus $I2C_BUS (expected 0x68 or UU)"
     exit 1
 fi
 
@@ -37,21 +36,19 @@ dec2bcd() {
     printf "%02x" $(( (10#$1 / 10 << 4) | (10#$1 % 10) ))
 }
 
-# Write time to DS3231
-sudo i2cset -y $I2C_BUS $RTC_ADDR 0x00 $(dec2bcd $s)
-sudo i2cset -y $I2C_BUS $RTC_ADDR 0x01 $(dec2bcd $m)
-sudo i2cset -y $I2C_BUS $RTC_ADDR 0x02 $(dec2bcd $h)
-sudo i2cset -y $I2C_BUS $RTC_ADDR 0x04 $(dec2bcd $D)
-sudo i2cset -y $I2C_BUS $RTC_ADDR 0x05 $(dec2bcd $M)
-sudo i2cset -y $I2C_BUS $RTC_ADDR 0x06 $(dec2bcd $((Y-2000)))
+# Only write to RTC if i2c-tools can access it (kernel overlay may block direct writes)
+if i2cdetect -y $I2C_BUS | grep -q "68"; then
+    sudo i2cset -y $I2C_BUS $RTC_ADDR 0x00 $(dec2bcd $s)
+    sudo i2cset -y $I2C_BUS $RTC_ADDR 0x01 $(dec2bcd $m)
+    sudo i2cset -y $I2C_BUS $RTC_ADDR 0x02 $(dec2bcd $h)
+    sudo i2cset -y $I2C_BUS $RTC_ADDR 0x04 $(dec2bcd $D)
+    sudo i2cset -y $I2C_BUS $RTC_ADDR 0x05 $(dec2bcd $M)
+    sudo i2cset -y $I2C_BUS $RTC_ADDR 0x06 $(dec2bcd $((Y-2000)))
+    echo "RTC successfully updated!"
+else
+    echo "RTC is bound to kernel driver (UU). You can use timedatectl to sync system time from RTC."
+fi
 
-echo "RTC successfully updated!"
-
-# Optional: read back RTC time and display
-echo "Reading RTC time..."
-for reg in 0x00 0x01 0x02 0x04 0x05 0x06; do
-    val=$(i2cget -y $I2C_BUS $RTC_ADDR $reg)
-    echo "Register $reg: $val"
-done
-
-echo "Done."
+# Optional: show RTC info via system interface
+echo "RTC status via timedatectl:"
+timedatectl status
