@@ -26,6 +26,10 @@ Note:
 #                                       Import modeuls
 # ================================================================================================
 
+from gpiozero.pins.lgpio import LGPIOFactory
+from gpiozero import Device
+Device.pin_factory = LGPIOFactory()
+
 import serial
 import re
 import pandas as pd
