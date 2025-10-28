@@ -23,22 +23,19 @@ Note:
 """
 
 # ================================================================================================
-#                                       Import modeuls
+#                                       Import modules
 # ================================================================================================
-
 import serial
 import re
 import pandas as pd
 from datetime import datetime
-import random
 import os
 import time
 
 # ================================================================================================
 #                                       Serial Setup & Parsing
 # ================================================================================================
-
-ser = serial.Serial("/dev/ttyAMA0", baudrate=9600)
+ser = serial.Serial("/dev/ttyAMA0", baudrate=9600, timeout=1)
 
 def parse_weight_line(line):
     """
@@ -54,27 +51,29 @@ def parse_weight_line(line):
         return label, value, unit
     return None
 
+def clean_line(raw_bytes):
+    """Decode serial bytes and remove control characters"""
+    line = raw_bytes.decode("utf-8", errors="ignore")
+    line = re.sub(r'[\x00-\x1F\x7F]', '', line).strip()
+    return line
 
 # ================================================================================================
 #                                       USB Mounting
 # ================================================================================================
-
 def get_usb_mount_path():
-    username = "moorcroftlab"  
+    username = "moorcroftlab"
     base_path = f"/media/{username}/"
     if os.path.exists(base_path):
         devices = os.listdir(base_path)
         for device in devices:
             device_path = os.path.join(base_path, device)
             if os.path.ismount(device_path):
-                # Return the first mounted device found
                 return device_path
     return None
 
 # ================================================================================================
 #                                       Main Loop
 # ================================================================================================
-
 df = pd.DataFrame(columns=["Timestamp", "Gross", "Tare", "Net", "Unit"])
 
 try:
@@ -84,55 +83,57 @@ try:
     current_unit = ""
 
     while True:
-        line = ser.readline().decode("utf-8", errors="ignore").strip()
-        print(line)
-        mount_path = get_usb_mount_path()
-        #print(f"USB Mount Path: {mount_path}")
-        if line:
-            result = parse_weight_line(line)
-            if result:
-                label, value, unit = result
-                weights[label] = value
-                current_unit = unit
+        raw_line = ser.readline()
+        if not raw_line:
+            continue
 
-                if all(k in weights for k in ("Gross", "Tare", "Net")):
-                    net_weight = weights["Net"]
+        line = clean_line(raw_line)
+        if not line:
+            continue
 
-                    if net_weight > 0:
+        print("Received:", line)
 
-                        new_row = pd.DataFrame([{
-                            "Timestamp": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3],  # ISO format with milliseconds
-                            "Gross": weights["Gross"],
-                            "Tare": weights["Tare"],
-                            "Net": net_weight,
-                            "Unit": current_unit
-                        }])
+        result = parse_weight_line(line)
+        if result:
+            label, value, unit = result
+            weights[label] = value
+            current_unit = unit
 
-                        # Append new row to DataFrame
-                        df = pd.concat([df, new_row], ignore_index=True)
-                        print(df.tail(1))
+        if all(k in weights for k in ("Gross", "Tare", "Net")):
+            net_weight = weights["Net"]
 
-                        # Append to CSV immediately (without header if file exists)
-                        # Try saving to USB
-                        usb_path = get_usb_mount_path()
-                        if usb_path:
-                            file_path = os.path.join(usb_path, "scale_weights.csv")
-                            new_row.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
-                        else:
-                            print("WARNING: No USB drive detected. Waiting for re-insertion...")
+            if net_weight > 0:
+                timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+                new_row = pd.DataFrame([{
+                    "Timestamp": timestamp,
+                    "Gross": weights["Gross"],
+                    "Tare": weights["Tare"],
+                    "Net": net_weight,
+                    "Unit": current_unit
+                }])
 
-                            # Wait loop until USB is inserted
-                            while not get_usb_mount_path():
-                                time.sleep(1)
+                # Append to DataFrame and print
+                df = pd.concat([df, new_row], ignore_index=True)
+                print(df.tail(1))
 
+                # Block until USB is available
+                usb_path = None
+                while not usb_path:
+                    usb_path = get_usb_mount_path()
+                    if not usb_path:
+                        print("Waiting for USB drive...")
+                        time.sleep(1)
 
-                    else:
-                        print("Waiting for scale data...")
+                file_path = os.path.join(usb_path, "scale_weights.csv")
+                new_row.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
+                print(f"Saved to {file_path}")
 
-                    weights.clear()
+            # Clear weights for next reading
+            weights.clear()
 
 except KeyboardInterrupt:
     print("\nStopped by user.")
 
 finally:
     ser.close()
+
