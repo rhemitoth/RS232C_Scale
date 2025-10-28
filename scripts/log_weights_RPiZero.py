@@ -121,7 +121,7 @@ try:
         if all(k in weights for k in ("Gross", "Tare", "Net")):
             net_weight = weights["Net"]
 
-            if net_weight > 0:
+            if net_weight > -1:
                 timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
                 new_row = pd.DataFrame([{
                     "Timestamp": timestamp,

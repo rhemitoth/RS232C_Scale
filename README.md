@@ -10,14 +10,14 @@ This repository contains code to program a Raspberry Pi to read data from an ele
 - **RS232C cable**
 - **SD card and USB SD card reader** – For saving weight measurements
 - **Optional e-paper Hat** – Tested with the 2.13-inch e-Paper Hat from [Waveshare](https://www.waveshare.com/2.13inch-e-paper-hat-plus.htm)
-
+- **Optional RTC Module** - If the system is not going to be connected to WiFi during deployment, you should configure your Raspberry Pi to use a Real Time Clock. [This tutorial](https://pimylifeup.com/raspberry-pi-rtc/) describes how to set one up.
 ---
 
 ## Serial Port Setup
 
 This project communicates with the RS232 scale through the Raspberry Pi’s UART interface, which is exposed on the GPIO header and used by the Serial Pi HAT. You must enable the UART (serial port) before the scale can be read.
 
-### 1. Enable UART on Raspberry Pi Zero
+### 1. Enable UART 
 
 1. Open the Raspberry Pi configuration tool:
 
