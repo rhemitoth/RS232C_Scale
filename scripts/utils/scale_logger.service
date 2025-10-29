@@ -3,13 +3,14 @@ Description=RS232 Scale Data Logger
 After=network.target
 
 [Service]
-User=root
+User=moorcroftlab
 WorkingDirectory=/home/moorcroftlab/Documents/RS232C_Scale/scripts
 ExecStartPre=/bin/sleep 5
-ExecStart=/home/moorcroftlab/scale/bin/python /home/moorcroftlab/Documents/RS232C_Scale/scripts/log_weights_RPiZero.py
+ExecStart=/bin/bash -c "source /home/moorcroftlab/scale/bin/activate && exec python log_weights_RPiZero.py"
 Restart=on-failure
 StandardOutput=append:/home/moorcroftlab/log_output.txt
 StandardError=append:/home/moorcroftlab/log_error.txt
 
 [Install]
 WantedBy=multi-user.target
+
