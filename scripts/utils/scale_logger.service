@@ -3,11 +3,27 @@ Description=RS232 Scale Data Logger
 After=network.target
 
 [Service]
+# Run as the user who owns the virtual environment
 User=moorcroftlab
+Group=moorcroftlab
+
+# Ensure the script runs in the correct directory
 WorkingDirectory=/home/moorcroftlab/Documents/RS232C_Scale/scripts
+
+# Wait 5 seconds after boot before starting
 ExecStartPre=/bin/sleep 5
-ExecStart=/home/moorcroftlab/Documents/RS232C_Scale/utils/run_logger.sh
+
+# Run your shell wrapper that activates the venv and runs the script
+ExecStart=/home/moorcroftlab/Documents/RS232C_Scale/scripts/utils/run_logger.sh
+
+# Restart the service automatically if it fails
 Restart=on-failure
+RestartSec=5
+
+# Force Python output to appear in logs immediately
+Environment=PYTHONUNBUFFERED=1
+
+# Capture stdout and stderr in log files
 StandardOutput=append:/home/moorcroftlab/log_output.txt
 StandardError=append:/home/moorcroftlab/log_error.txt
 
