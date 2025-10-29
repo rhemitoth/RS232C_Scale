@@ -84,40 +84,47 @@ To keep dependencies organized and avoid conflicts, it is recommended to use a P
 
 ### 1. Create the environment
 
+```
 python3 -m venv ~/scale
+```
 
 This will create a virtual environment called `scale` in your home directory.
 
 ### 2. Activate the environment
 
- log
+```
+source ~/scale/bin/activate 
+```
+
 Your shell prompt will indicate that `scale` is active.
 
 ### 3. Upgrade pip
 
+```
 pip install --upgrade pip
+```
 
 ### 4. Install required packages
 
+```
 pip install pyserial pandas
+```
 
 > Note: Packages like `re`, `datetime`, `random`, `os`, and `time` are part of the Python standard library and do not require installation.
 
 ### 5. Verify the environment
 
+```
 python -c "import serial, re, pandas, datetime, random, os, time; print('All imports work!')"
+```
 
 If you see `All imports work!`, the environment is correctly set up.
 
-### 6. Using the environment
-
-- Activate the environment whenever you work on this project:
-
-source ~/scale/bin/activate
-
 - Deactivate it when done:
 
+```
 deactivate
+```
 
 -- 
 
