@@ -172,7 +172,11 @@ The `scale_logger.service` file allows your Raspberry Pi to automatically start 
 From your project folder (for example, `scripts/utils`), copy the service file to the systemd directory:
 
 ```
+# Raspberry Pi 5
 sudo cp scripts/utils/scale_logger.service /etc/systemd/system/
+
+# Raspberry Pi Zero
+sudo cp scripts/utils/scale_logger.service /lib/systemd/system
 ```
 
 ### 2. Reload systemd to register the new service
@@ -205,6 +209,7 @@ Log outputs are saved to:
 ### Notes
 - Before installing, update any hard-coded paths in `scale_logger.service` to match your username and directory structure.  
   For example, if your username is `pi`, replace `/home/moorcroftlab/` with `/home/pi/`.
+- Also make sure that that scale_logger.service is activating the correct script (`log_weights_RPi5.py` vs. `log_weights_RPiZero.py`)
 - Ensure the working directory path points to your local clone of the project:
   ```
   /home/<your-username>/Documents/RS232C_Scale/scripts
