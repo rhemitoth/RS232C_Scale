@@ -90,8 +90,7 @@ This will create a virtual environment called `scale` in your home directory.
 
 ### 2. Activate the environment
 
-source ~/scale/bin/activate
-
+ log
 Your shell prompt will indicate that `scale` is active.
 
 ### 3. Upgrade pip
@@ -158,27 +157,64 @@ These scripts read weight data automatically from the scale through the RS232C i
 
 5. Press Ctrl+C to stop the script.
 
+
+
 #### Notes
 
 - Ensure your scale is configured to send stable weight readings automatically through the RS232C port
 - Adjust the serial port device path (`/dev/ttyAMA0`) if needed depending on your Raspberry Pi setup
 
-## Using the DS3231 RTC on Raspberry Pi Zero
+## Setting up `scale_logger.service` on the Raspberry Pi
 
-The Pi Zero does not include a hardware clock (`hwclock`). To persist time across reboots using an external DS3231 RTC, run the `set_RTC.sh` script.
+The `scale_logger.service` file allows your Raspberry Pi to automatically start the RS232 Scale Data Logger on boot and manage it as a background system service.
 
-### Purpose
-- Detects the DS3231 on I2C
-- Writes the current system time to the RTC
-- Works even if `hwclock` is not available
+### 1. Move the service file to the correct system directory
+From your project folder (for example, `scripts/utils`), copy the service file to the systemd directory:
 
-### Usage
-1. Make the script executable:
-   chmod +x set_RTC.sh
-2. Run it with sudo:
-   sudo ./set_RTC.sh
+```
+sudo cp scripts/utils/scale_logger.service /etc/systemd/system/
+```
 
-This will update the RTC with the current system time so it persists across reboots.
+### 2. Reload systemd to register the new service
+```
+sudo systemctl daemon-reload
+```
+
+### 3. Enable the service to start automatically on boot
+```
+sudo systemctl enable scale_logger.service
+```
+
+### 4. Start or stop the service manually
+```
+sudo systemctl start scale_logger.service
+sudo systemctl stop scale_logger.service
+```
+
+### 5. Check the service status or logs
+```
+sudo systemctl status scale_logger.service
+```
+
+Log outputs are saved to:
+- **Standard output:** `/home/moorcroftlab/log_output.txt`
+- **Error output:** `/home/moorcroftlab/log_error.txt`
+
+---
+
+### Notes
+- Before installing, update any hard-coded paths in `scale_logger.service` to match your username and directory structure.  
+  For example, if your username is `pi`, replace `/home/moorcroftlab/` with `/home/pi/`.
+- Ensure the working directory path points to your local clone of the project:
+  ```
+  /home/<your-username>/Documents/RS232C_Scale/scripts
+  ```
+- The service runs as **root** and automatically starts 5 seconds after boot (`ExecStartPre=/bin/sleep 5`).
+- After editing the service file, reload and restart it:
+  ```
+  sudo systemctl daemon-reload
+  sudo systemctl restart scale_logger.service
+  ```
 
 
 
