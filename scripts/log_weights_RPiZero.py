@@ -8,18 +8,14 @@ Features:
 - Connects to serial port (default /dev/ttyAMA0 at 9600 baud)
 - Parses lines of the form: "Gross: 1.23lb", "Tare: 0.00lb", "Net: 1.23lb"
 - Collects a complete set of Gross, Tare, and Net weights before saving a record
+- Uses DS3231 RTC via I2C (smbus2) for accurate timestamps
 - Stores data in a pandas DataFrame and exports to scale_weights.csv on exit
 - Prints each recorded measurement row as it is added
-- Timeout set for 2 seconds on serial read to balance responsiveness and CPU usage
 
 Usage:
 - Intended for use with a Raspberry Pi Zero
-- Ensure pyserial and pandas are installed (`pip install pyserial pandas`)
-- Adjust serial port path if needed
-
-Note:
-- The scale must be configured to send data automatically upon stable readings.
-- Additional filtering or validation of incoming data may be necessary for noisy environments.
+- Ensure pyserial, pandas, and smbus2 are installed (`pip install pyserial pandas smbus2`)
+- Ensure the DS3231 is connected via I2C and overlay is disabled
 """
 
 # ================================================================================================
@@ -31,7 +27,7 @@ import pandas as pd
 from datetime import datetime
 import os
 import time
-import subprocess
+import smbus2
 
 # ================================================================================================
 #                                       Serial Setup & Parsing
@@ -69,20 +65,30 @@ def get_usb_mount_path():
     return None
 
 # ================================================================================================
-#                                       RTC Timestamp
+#                                       RTC via SMBus (DS3231)
 # ================================================================================================
+I2C_BUS = 1
+RTC_ADDR = 0x68
+bus = smbus2.SMBus(I2C_BUS)
+
+def bcd_to_int(bcd):
+    """Convert BCD byte to integer"""
+    return ((bcd >> 4) * 10) + (bcd & 0x0F)
+
 def get_rtc_time():
-    """Reads RTC time from timedatectl and returns a UTC datetime object"""
+    """Read time from DS3231 RTC via I2C and return UTC datetime"""
     try:
-        output = subprocess.check_output(['timedatectl'], text=True)
-        match = re.search(r'RTC time:\s*(.*)', output)
-        if match:
-            rtc_str = match.group(1).strip()  # e.g., "Mon 2025-10-28 14:35:10"
-            rtc_dt = datetime.strptime(rtc_str.split(' ', 1)[1], "%Y-%m-%d %H:%M:%S")
-            return rtc_dt
+        data = bus.read_i2c_block_data(RTC_ADDR, 0x00, 7)
+        second = bcd_to_int(data[0] & 0x7F)
+        minute = bcd_to_int(data[1])
+        hour = bcd_to_int(data[2] & 0x3F)
+        day = bcd_to_int(data[4])
+        month = bcd_to_int(data[5] & 0x1F)
+        year = 2000 + bcd_to_int(data[6])
+        return datetime(year, month, day, hour, minute, second)
     except Exception as e:
-        print(f"Failed to get RTC time: {e}")
-    return None
+        print(f"Failed to read RTC: {e}")
+        return datetime.utcnow()
 
 # ================================================================================================
 #                                       Main Loop
@@ -116,12 +122,9 @@ try:
         if all(k in weights for k in ("Gross", "Tare", "Net")):
             net_weight = weights["Net"]
             if net_weight > 0:
-                # Get RTC timestamp (UTC)
+                # Get timestamp from DS3231
                 rtc_dt = get_rtc_time()
-                if rtc_dt:
-                    timestamp = rtc_dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + " UTC"
-                else:
-                    timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + " UTC"
+                timestamp = rtc_dt.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3] + " UTC"
 
                 new_row = pd.DataFrame([{
                     "Timestamp": timestamp,
@@ -156,4 +159,4 @@ except KeyboardInterrupt:
 
 finally:
     ser.close()
-
+    bus.close()

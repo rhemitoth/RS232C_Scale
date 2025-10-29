@@ -30,14 +30,14 @@ def set_rtc_time(dt):
         int_to_bcd(dt.month),
         int_to_bcd(dt.year - 2000),
     ]
-    # Write all 7 registers starting at 0x00
     bus.write_i2c_block_data(RTC_ADDR, 0x00, data)
     print(f"RTC time set to: {dt.isoformat()} UTC")
 
 # ==========================
-# Example usage
+# Main Logic
 # ==========================
 if __name__ == "__main__":
-    # Change this to whatever time you want to test
-    test_time = datetime(2025, 10, 28, 12, 0, 0)  # YYYY, MM, DD, HH, MM, SS UTC
-    set_rtc_time(test_time)
+    # Get current system time (in UTC)
+    system_time = datetime.utcnow()
+    print(f"System UTC time: {system_time.isoformat()}")
+    set_rtc_time(system_time)

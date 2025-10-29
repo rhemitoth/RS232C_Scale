@@ -220,6 +220,23 @@ Log outputs are saved to:
   sudo systemctl daemon-reload
   sudo systemctl restart scale_logger.service
   ```
+  
+  ## Using the DS3231 RTC on Raspberry Pi Zero (No `hwclock` Support)
+The Raspberry Pi Zero does not have a built-in hardware clock, and in some cases, the `hwclock` utility is unavailable even if the `util-linux` package is installed. In this situation, do not enable the RTC kernel overlay (for example: `dtoverlay=i2c-rtc,ds3231`) because it prevents user-level access to the I²C device. Instead, the DS3231 should be accessed directly from Python.
+### How it works
+The provided Python scripts communicate directly with the DS3231 RTC chip over the I²C bus (`/dev/i2c-1`). This allows you to read the RTC time to verify it keeps time independently of the system clock, and write (sync) the RTC time to match the current system time.
+### Writing system time to the RTC
+Run: `python3 sync_rtc_to_system.py`
+This script reads the current system time in UTC and writes it to the DS3231 registers. Use this after connecting the Pi to the internet or otherwise setting the correct system time.
+### Reading RTC time
+To confirm the RTC is keeping time, run your RTC read script (for example: `rtc_read.py`). If the RTC is working correctly, the time will continue advancing even when the Pi is powered off.
+### Summary
+| Action | Script | Description |
+|--------|---------|-------------|
+| Sync RTC with system | `sync_rtc_to_system.py` | Copies the Pi’s current UTC time to the DS3231 |
+| Read RTC time | `rtc_read.py` | Reads and prints the DS3231’s stored time |
+| Kernel overlay | *Disabled* | Must remain off so Python can access I²C directly |
+
 
 
 
