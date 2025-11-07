@@ -28,6 +28,14 @@ from datetime import datetime
 import os
 import time
 import smbus2
+import RPi.GPIO as GPIO
+
+# ================================================================================================
+#                                       LED Setup (GPIO 18)
+# ================================================================================================
+LED_PIN = 18
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(LED_PIN, GPIO.OUT)
 
 # ================================================================================================
 #                                       Serial Setup & Parsing
@@ -91,6 +99,19 @@ def get_rtc_time():
         return datetime.utcnow()
 
 # ================================================================================================
+#                                       USB Flash
+# ================================================================================================
+
+def flash_led(times=2, delay=0.2):
+    """Flash the LED connected to GPIO 18."""
+    for _ in range(times):
+        GPIO.output(LED_PIN, GPIO.HIGH)
+        time.sleep(delay)
+        GPIO.output(LED_PIN, GPIO.LOW)
+        time.sleep(delay)
+
+
+# ================================================================================================
 #                                       Main Loop
 # ================================================================================================
 df_columns = ["Timestamp", "Gross", "Tare", "Net", "Unit", "Timezone"]
@@ -150,6 +171,7 @@ try:
                 file_path = os.path.join(usb_path, "scale_weights.csv")
                 new_row.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
                 print(f"Saved to {file_path}")
+                flash_led(2, 0.2)
 
             # Clear weights for the next reading
             weights.clear()
@@ -160,3 +182,4 @@ except KeyboardInterrupt:
 finally:
     ser.close()
     bus.close()
+    GPIO.cleanup()
