@@ -102,13 +102,13 @@ def get_rtc_time():
 #                                       USB Flash
 # ================================================================================================
 
-def flash_led(times=2, delay=0.5):
+def flash_led(times=2):
     """Flash the LED connected to GPIO 18."""
     for _ in range(times):
         GPIO.output(LED_PIN, GPIO.HIGH)
-        time.sleep(delay)
+        time.sleep(1)
         GPIO.output(LED_PIN, GPIO.LOW)
-        time.sleep(delay)
+        time.sleep(0.5)
 
 
 # ================================================================================================
@@ -171,7 +171,7 @@ try:
                 file_path = os.path.join(usb_path, "scale_weights.csv")
                 new_row.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
                 print(f"Saved to {file_path}")
-                flash_led(2, 0.2)
+                flash_led(2)
 
             # Clear weights for the next reading
             weights.clear()
