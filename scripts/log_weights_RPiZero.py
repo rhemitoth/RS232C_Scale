@@ -102,7 +102,7 @@ def get_rtc_time():
 #                                       USB Flash
 # ================================================================================================
 
-def flash_led(times=2, delay=0.2):
+def flash_led(times=2, delay=0.5):
     """Flash the LED connected to GPIO 18."""
     for _ in range(times):
         GPIO.output(LED_PIN, GPIO.HIGH)
